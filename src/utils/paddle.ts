@@ -33,7 +33,6 @@ export class PaddleService {
   private static instance: PaddleService;
   private isInitialized = false;
   private readonly clientToken = 'live_09f0758b28567d8bcbf3f62f734'; // Your live client token
-  private readonly environment = 'production';
   private readonly sellerId = '233505';
 
   private constructor() {}
@@ -69,15 +68,15 @@ export class PaddleService {
           console.log('Paddle script loaded, initializing...');
           
           if (window.Paddle) {
-            // Initialize Paddle v2 with client token
+            // Initialize Paddle v2 with correct parameters (no environment parameter)
             window.Paddle.Initialize({
               token: this.clientToken,
-              environment: this.environment,
               eventCallback: this.handlePaddleEvent.bind(this)
             });
             
             this.isInitialized = true;
-            console.log('Paddle v2 initialized successfully with environment:', this.environment);
+            console.log('Paddle v2 initialized successfully');
+            console.log('Client Token:', this.clientToken.substring(0, 15) + '...');
             console.log('Seller ID:', this.sellerId);
             resolve();
           } else {
@@ -290,16 +289,7 @@ export class PaddleService {
         items: options.items.map(item => ({
           priceId: item.priceId,
           quantity: item.quantity || 1
-        })),
-        settings: {
-          displayMode: 'overlay',
-          theme: 'light',
-          locale: 'en',
-          allowLogout: false,
-          showAddTaxId: true,
-          showAddDiscounts: true,
-          ...options.settings
-        }
+        }))
       };
 
       // Add customer information if provided
@@ -316,6 +306,16 @@ export class PaddleService {
           timestamp: new Date().toISOString(),
           source: 'devmint_website',
           ...options.customData
+        };
+      }
+
+      // Add settings if provided
+      if (options.settings) {
+        checkoutOptions.settings = {
+          displayMode: 'overlay',
+          theme: 'light',
+          locale: 'en',
+          ...options.settings
         };
       }
 
@@ -393,7 +393,6 @@ export class PaddleService {
   // Get environment info
   getEnvironmentInfo(): object {
     return {
-      environment: this.environment,
       sellerId: this.sellerId,
       clientToken: this.clientToken.substring(0, 15) + '...',
       isInitialized: this.isInitialized,
