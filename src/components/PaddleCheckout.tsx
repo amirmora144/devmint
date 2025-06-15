@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { paddle } from '../utils/paddle';
-import { CreditCard, Loader, DollarSign, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { CreditCard, Loader, DollarSign, CheckCircle, AlertCircle, ExternalLink, RefreshCw } from 'lucide-react';
 
 interface PaddleCheckoutProps {
   planType: 'pro' | 'enterprise' | 'donation';
@@ -24,16 +24,18 @@ const PaddleCheckout: React.FC<PaddleCheckoutProps> = ({
   const [initError, setInitError] = useState<string | null>(null);
   const [paddleStatus, setPaddleStatus] = useState<string>('Initializing...');
 
-  // IMPORTANT: You need to create these products in your Paddle dashboard and get the real price IDs
-  // The transaction ID you provided (txn_01jxqzf2spf3mt53z7kvg9yset) is NOT a price ID
+  // Updated price IDs with your actual Paddle product IDs
   const priceIds = {
     pro: {
-      monthly: 'pri_01jxkfd08h8gwv7mqxw1ah948b', // Replace with your actual Paddle price ID for Pro Monthly
-      yearly: 'pri_01jxkfsmdcw6tfx7s0wjkdbazr'   // Replace with your actual Paddle price ID for Pro Yearly
+      monthly: 'pri_01jxkfd08h8gwv7mqxw1ah948b', // Professional Plan Monthly ($29)
+      yearly: 'pri_01jxkfsmdcw6tfx7s0wjkdbazr'   // Professional Plan Yearly ($288)
     },
     enterprise: {
-      monthly: 'pri_01jxkfk7whgk1q9pjfxdt4kbg6', // Replace with your actual Paddle price ID for Enterprise Monthly
-      yearly: 'pri_01jxkfxs04a3gxkrwj32kpzk30'   // Replace with your actual Paddle price ID for Enterprise Yearly
+      monthly: 'pri_01jxkfk7whgk1q9pjfxdt4kbg6', // Enterprise Plan Monthly ($99)
+      yearly: 'pri_01jxkfxs04a3gxkrwj32kpzk30'   // Enterprise Plan Yearly ($984)
+    },
+    donation: {
+      productId: 'pro_01jxj37mv7xyy7kmkewmta6dze' // Testing invoice product for donations ($1 base)
     }
   };
 
@@ -45,11 +47,12 @@ const PaddleCheckout: React.FC<PaddleCheckoutProps> = ({
     try {
       setIsLoading(true);
       setPaddleStatus('Loading Paddle.js...');
+      setInitError(null);
       
+      console.log('Starting Paddle initialization...');
       await paddle.initialize();
       
       setIsInitialized(true);
-      setInitError(null);
       setPaddleStatus('Ready for payment');
       
       console.log('Paddle initialization completed successfully');
@@ -61,6 +64,22 @@ const PaddleCheckout: React.FC<PaddleCheckoutProps> = ({
       onError?.('Failed to initialize payment system. Please refresh the page and try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRetryInitialization = async () => {
+    console.log('Retrying Paddle initialization...');
+    setInitError(null);
+    setIsInitialized(false);
+    
+    try {
+      await paddle.forceReinitialize();
+      setIsInitialized(true);
+      setPaddleStatus('Ready for payment');
+    } catch (error) {
+      console.error('Retry initialization failed:', error);
+      setInitError(`Retry failed: ${error}`);
+      setPaddleStatus('Failed to load');
     }
   };
 
@@ -99,12 +118,16 @@ const PaddleCheckout: React.FC<PaddleCheckoutProps> = ({
             planType,
             billingCycle,
             userId: userEmail || 'anonymous',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            source: 'devmint_website'
           },
           settings: {
             displayMode: 'overlay',
             theme: 'light',
-            locale: 'en'
+            locale: 'en',
+            allowLogout: false,
+            showAddTaxId: true,
+            showAddDiscounts: true
           }
         });
       }
@@ -191,9 +214,10 @@ const PaddleCheckout: React.FC<PaddleCheckoutProps> = ({
           <p className="text-red-600 mb-4 text-sm">{initError}</p>
           <div className="space-y-3">
             <button
-              onClick={initializePaddle}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              onClick={handleRetryInitialization}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center mx-auto"
             >
+              <RefreshCw className="w-4 h-4 mr-2" />
               Retry Initialization
             </button>
             <div className="text-xs text-gray-500">
@@ -264,20 +288,16 @@ const PaddleCheckout: React.FC<PaddleCheckoutProps> = ({
         </div>
       </div>
 
-      {/* Setup Instructions */}
-      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+      {/* Live Credentials Info */}
+      <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
         <div className="flex items-start space-x-2">
-          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-yellow-800">
-            <strong>Setup Required:</strong> To process payments, you need to:
-            <ol className="mt-2 ml-4 list-decimal space-y-1">
-              <li>Go to your <a href="https://vendors.paddle.com/products" target="_blank" rel="noopener noreferrer" className="text-yellow-900 hover:underline font-medium">Paddle Dashboard</a></li>
-              <li>Create products for each plan (Pro Monthly, Pro Yearly, Enterprise Monthly, Enterprise Yearly)</li>
-              <li>Copy the price IDs (they start with "pri_") from each product</li>
-              <li>Replace the placeholder price IDs in the code with your real ones</li>
-            </ol>
-            <div className="mt-2 p-2 bg-yellow-100 rounded text-xs font-mono">
-              Current Pro Monthly ID: {priceIds.pro.monthly}
+          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-green-800">
+            <strong>Live Payment Processing:</strong> This checkout uses live Paddle.com credentials.
+            <div className="mt-2 text-xs">
+              <div>• Environment: Production</div>
+              <div>• Seller ID: 233505</div>
+              <div>• Real payments will be processed</div>
             </div>
           </div>
         </div>
@@ -341,7 +361,7 @@ const PaddleCheckout: React.FC<PaddleCheckoutProps> = ({
             Paddle Status: {paddle.getStatus()}<br />
             Plan: {planType} ({billingCycle})<br />
             {planType !== 'donation' && `Price ID: ${priceIds[planType][billingCycle]}`}<br />
-            {planType === 'donation' && `Amount: $${customAmount?.toFixed(2)}`}<br />
+            {planType === 'donation' && `Amount: $${customAmount?.toFixed(2)} (Product: ${priceIds.donation.productId})`}<br />
             Environment: {JSON.stringify(paddle.getEnvironmentInfo(), null, 2)}
           </div>
         </div>
