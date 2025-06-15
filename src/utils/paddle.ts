@@ -68,39 +68,40 @@ export class PaddleService {
           console.log('Paddle script loaded, initializing...');
           
           if (window.Paddle) {
-            // Initialize Paddle v2 with correct parameters (no environment parameter)
+            // Initialize Paddle v2 with correct parameters
             window.Paddle.Initialize({
               token: this.clientToken,
               eventCallback: this.handlePaddleEvent.bind(this)
             });
             
             this.isInitialized = true;
-            console.log('Paddle v2 initialized successfully');
-            console.log('Client Token:', this.clientToken.substring(0, 15) + '...');
-            console.log('Seller ID:', this.sellerId);
+            console.log('✅ Paddle v2 initialized successfully');
+            console.log('🔑 Client Token:', this.clientToken.substring(0, 15) + '...');
+            console.log('🏪 Seller ID:', this.sellerId);
+            console.log('🌍 Environment: Production (Live)');
             resolve();
           } else {
             throw new Error('Paddle object not available after script load');
           }
         } catch (error) {
-          console.error('Paddle initialization error:', error);
+          console.error('❌ Paddle initialization error:', error);
           this.isInitialized = false;
           reject(error);
         }
       };
 
       script.onerror = (error) => {
-        console.error('Failed to load Paddle.js script:', error);
+        console.error('❌ Failed to load Paddle.js script:', error);
         reject(new Error('Failed to load Paddle.js script'));
       };
 
       document.head.appendChild(script);
-      console.log('Paddle script added to document head');
+      console.log('📦 Paddle script added to document head');
     });
   }
 
   private handlePaddleEvent(data: any) {
-    console.log('Paddle Event Received:', data);
+    console.log('🎯 Paddle Event Received:', data);
     
     try {
       switch (data.name) {
@@ -114,27 +115,27 @@ export class PaddleService {
           this.handleCheckoutError(data);
           break;
         case 'checkout.loaded':
-          console.log('Checkout loaded successfully');
+          console.log('✅ Checkout loaded successfully');
           break;
         case 'checkout.customer.created':
-          console.log('Customer created:', data);
+          console.log('👤 Customer created:', data);
           break;
         case 'checkout.payment.initiated':
-          console.log('Payment initiated:', data);
+          console.log('💳 Payment initiated:', data);
           break;
         case 'checkout.payment.completed':
-          console.log('Payment completed:', data);
+          console.log('✅ Payment completed:', data);
           break;
         default:
-          console.log('Unhandled Paddle event:', data.name, data);
+          console.log('ℹ️ Unhandled Paddle event:', data.name, data);
       }
     } catch (error) {
-      console.error('Error handling Paddle event:', error);
+      console.error('❌ Error handling Paddle event:', error);
     }
   }
 
   private handleCheckoutCompleted(data: any) {
-    console.log('Payment completed successfully:', data);
+    console.log('🎉 Payment completed successfully:', data);
     
     try {
       const transactionData = data.data;
@@ -142,24 +143,21 @@ export class PaddleService {
       const transactionId = transactionData?.transaction?.id || transactionData?.id;
       const customerEmail = transactionData?.customer?.email;
       
-      console.log('Transaction ID:', transactionId);
-      console.log('Customer Email:', customerEmail);
-      console.log('Custom Data:', customData);
+      console.log('📄 Transaction ID:', transactionId);
+      console.log('📧 Customer Email:', customerEmail);
+      console.log('📊 Custom Data:', customData);
       
       if (customData?.planType === 'donation') {
-        // Handle donation completion
         this.showSuccessMessage(
           'Thank you for your generous donation! 🙏',
           `Your support helps us continue building amazing tools for developers.`,
           transactionId
         );
         
-        // Redirect to dashboard with success indicator
         setTimeout(() => {
           window.location.href = '/dashboard?payment=success&type=donation&txn=' + transactionId;
         }, 3000);
       } else {
-        // Handle subscription completion
         const planName = customData?.planType || 'Premium';
         const billingCycle = customData?.billingCycle || 'monthly';
         
@@ -169,24 +167,21 @@ export class PaddleService {
           transactionId
         );
         
-        // Redirect to dashboard with success indicator
         setTimeout(() => {
           window.location.href = '/dashboard?payment=success&plan=' + planName + '&txn=' + transactionId;
         }, 3000);
       }
     } catch (error) {
-      console.error('Error processing checkout completion:', error);
+      console.error('❌ Error processing checkout completion:', error);
     }
   }
 
   private handleCheckoutClosed(data: any) {
-    console.log('Checkout closed by user:', data);
-    // User closed the checkout without completing payment
-    // This is normal behavior, no error needed
+    console.log('🚪 Checkout closed by user:', data);
   }
 
   private handleCheckoutError(data: any) {
-    console.error('Checkout error occurred:', data);
+    console.error('❌ Checkout error occurred:', data);
     
     try {
       const errorMessage = data.error?.message || data.message || 'An unknown error occurred during payment processing.';
@@ -197,7 +192,7 @@ export class PaddleService {
         'Please try again or contact our support team if the problem persists.'
       );
     } catch (error) {
-      console.error('Error handling checkout error:', error);
+      console.error('❌ Error handling checkout error:', error);
     }
   }
 
@@ -206,7 +201,7 @@ export class PaddleService {
       ? `${message}\n\nTransaction ID: ${transactionId}\n\nYou will receive a confirmation email shortly.`
       : `${message}\n\nYou will receive a confirmation email shortly.`;
     
-    // Create a more user-friendly success notification
+    // Create a beautiful success notification
     const notification = document.createElement('div');
     notification.innerHTML = `
       <div style="
@@ -215,24 +210,35 @@ export class PaddleService {
         right: 20px;
         background: linear-gradient(135deg, #10B981, #059669);
         color: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
         z-index: 10000;
-        max-width: 400px;
+        max-width: 420px;
         font-family: system-ui, -apple-system, sans-serif;
+        animation: slideIn 0.3s ease-out;
       ">
-        <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600;">${title}</h3>
-        <p style="margin: 0; font-size: 14px; line-height: 1.4;">${fullMessage}</p>
+        <style>
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        </style>
+        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700;">${title}</h3>
+        <p style="margin: 0; font-size: 15px; line-height: 1.5; opacity: 0.95;">${fullMessage}</p>
       </div>
     `;
     
     document.body.appendChild(notification);
     
-    // Remove notification after 5 seconds
     setTimeout(() => {
       if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
+        notification.style.animation = 'slideOut 0.3s ease-in forwards';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
       }
     }, 5000);
   }
@@ -240,7 +246,6 @@ export class PaddleService {
   private showErrorMessage(title: string, message: string, suggestion: string) {
     const fullMessage = `${message}\n\n${suggestion}\n\nIf you need help, contact support@devmint.site`;
     
-    // Create a more user-friendly error notification
     const notification = document.createElement('div');
     notification.innerHTML = `
       <div style="
@@ -249,21 +254,21 @@ export class PaddleService {
         right: 20px;
         background: linear-gradient(135deg, #EF4444, #DC2626);
         color: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        padding: 24px;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(239, 68, 68, 0.3);
         z-index: 10000;
-        max-width: 400px;
+        max-width: 420px;
         font-family: system-ui, -apple-system, sans-serif;
+        animation: slideIn 0.3s ease-out;
       ">
-        <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600;">${title}</h3>
-        <p style="margin: 0; font-size: 14px; line-height: 1.4;">${fullMessage}</p>
+        <h3 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700;">${title}</h3>
+        <p style="margin: 0; font-size: 15px; line-height: 1.5; opacity: 0.95;">${fullMessage}</p>
       </div>
     `;
     
     document.body.appendChild(notification);
     
-    // Remove notification after 8 seconds
     setTimeout(() => {
       if (notification.parentNode) {
         notification.parentNode.removeChild(notification);
@@ -272,10 +277,10 @@ export class PaddleService {
   }
 
   async openCheckout(options: PaddleCheckoutOptions): Promise<void> {
-    console.log('Opening checkout with options:', options);
+    console.log('🚀 Opening checkout with options:', options);
     
     if (!this.isInitialized) {
-      console.log('Paddle not initialized, initializing now...');
+      console.log('⏳ Paddle not initialized, initializing now...');
       await this.initialize();
     }
 
@@ -284,7 +289,7 @@ export class PaddleService {
     }
 
     try {
-      // Prepare checkout options for Paddle v2
+      // Prepare checkout options for Paddle v2 with proper structure
       const checkoutOptions: any = {
         items: options.items.map(item => ({
           priceId: item.priceId,
@@ -309,31 +314,41 @@ export class PaddleService {
         };
       }
 
-      // Add settings if provided
-      if (options.settings) {
-        checkoutOptions.settings = {
-          displayMode: 'overlay',
-          theme: 'light',
-          locale: 'en',
-          ...options.settings
-        };
+      // Add settings with proper defaults for overlay mode
+      checkoutOptions.settings = {
+        displayMode: 'overlay',
+        theme: 'light',
+        locale: 'en',
+        allowLogout: false,
+        showAddTaxId: true,
+        showAddDiscounts: true,
+        frameTarget: 'self',
+        frameInitialHeight: 450,
+        frameStyle: 'width: 100%; min-width: 312px; background-color: transparent; border: none;',
+        ...options.settings
+      };
+
+      console.log('📋 Final checkout options:', JSON.stringify(checkoutOptions, null, 2));
+      
+      // Ensure Paddle is ready before opening checkout
+      if (!window.Paddle.Checkout) {
+        throw new Error('Paddle Checkout is not available');
       }
 
-      console.log('Final checkout options:', checkoutOptions);
-      
       // Open Paddle v2 checkout
+      console.log('🎯 Opening Paddle checkout...');
       window.Paddle.Checkout.open(checkoutOptions);
-      console.log('Paddle checkout opened successfully');
+      console.log('✅ Paddle checkout opened successfully');
       
     } catch (error) {
-      console.error('Error opening checkout:', error);
+      console.error('❌ Error opening checkout:', error);
       throw new Error(`Failed to open checkout: ${error}`);
     }
   }
 
   // Create a donation checkout using the Testing invoice product
   async createDonationCheckout(amount: number, description: string = 'Donation to Devmint'): Promise<void> {
-    console.log(`Creating donation checkout for $${amount}`);
+    console.log(`💝 Creating donation checkout for $${amount}`);
     
     if (!this.isInitialized) {
       await this.initialize();
@@ -346,11 +361,10 @@ export class PaddleService {
 
     try {
       // Use the Testing invoice product for donations
-      // Note: This is a $1 product, so for larger amounts you might need to adjust quantity
-      // or create additional products in your Paddle dashboard
-      
       const donationProductId = 'pro_01jxj37mv7xyy7kmkewmta6dze'; // Testing invoice product ($1)
       const quantity = Math.round(amount); // Round to nearest dollar
+      
+      console.log(`💰 Using product ${donationProductId} with quantity ${quantity} for $${amount} donation`);
       
       await this.openCheckout({
         items: [{
@@ -371,15 +385,15 @@ export class PaddleService {
       });
 
     } catch (error) {
-      console.error('Donation checkout error:', error);
+      console.error('❌ Donation checkout error:', error);
       throw new Error(`Failed to process donation: ${error}`);
     }
   }
 
   // Check if Paddle is ready
   isReady(): boolean {
-    const ready = this.isInitialized && !!window.Paddle;
-    console.log('Paddle ready status:', ready);
+    const ready = this.isInitialized && !!window.Paddle && !!window.Paddle.Checkout;
+    console.log('🔍 Paddle ready status:', ready);
     return ready;
   }
 
@@ -387,6 +401,7 @@ export class PaddleService {
   getStatus(): string {
     if (!this.isInitialized) return 'Not initialized';
     if (!window.Paddle) return 'Paddle not loaded';
+    if (!window.Paddle.Checkout) return 'Checkout not available';
     return 'Ready';
   }
 
@@ -397,13 +412,15 @@ export class PaddleService {
       clientToken: this.clientToken.substring(0, 15) + '...',
       isInitialized: this.isInitialized,
       paddleAvailable: !!window.Paddle,
-      status: this.getStatus()
+      checkoutAvailable: !!(window.Paddle && window.Paddle.Checkout),
+      status: this.getStatus(),
+      environment: 'production'
     };
   }
 
   // Force re-initialization (useful for debugging)
   async forceReinitialize(): Promise<void> {
-    console.log('Force re-initializing Paddle...');
+    console.log('🔄 Force re-initializing Paddle...');
     this.isInitialized = false;
     
     // Remove existing script
@@ -418,6 +435,35 @@ export class PaddleService {
     }
     
     await this.initialize();
+  }
+
+  // Test checkout functionality
+  async testCheckout(): Promise<void> {
+    console.log('🧪 Testing Paddle checkout functionality...');
+    
+    if (!this.isReady()) {
+      throw new Error('Paddle is not ready for testing');
+    }
+
+    // Test with Professional Plan Monthly
+    const testOptions = {
+      items: [{
+        priceId: 'pri_01jxkfd08h8gwv7mqxw1ah948b', // Pro Monthly
+        quantity: 1
+      }],
+      customData: {
+        planType: 'pro',
+        billingCycle: 'monthly',
+        isTest: true
+      },
+      settings: {
+        displayMode: 'overlay' as const,
+        theme: 'light' as const
+      }
+    };
+
+    console.log('🎯 Opening test checkout...');
+    await this.openCheckout(testOptions);
   }
 }
 
